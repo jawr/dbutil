@@ -1,6 +1,10 @@
-package main
+package example
 
-type Foo {
+import (
+    "github.com/jawr/dbutil"
+)
+
+type Foo struct {
     ID uint64
     Data string
 }
@@ -13,7 +17,7 @@ const (
 )
 
 func Create(data string) (f *Foo, err error) {
-    id, err := Insert(INSERT_STMT, data)
+    id, err := dbutil.Insert(INSERT_STMT, data)
     if err != nil { return f, err }
     f = &Foo{
         ID: id,
@@ -23,16 +27,17 @@ func Create(data string) (f *Foo, err error) {
 }
 
 func (f *Foo) Save() error {
-    dbconn := Get()
+    dbconn := dbutil.Get()
     _, err := dbconn.Exec(
         UPDATE_STMT,
         f.Data,
+        f.ID,
     )
     return err
 }
 
 /* this is helpful when using trickier objects */
-func ParseRow(row Row) (Object, error) {
+func ParseRow(row dbutil.Row) (dbutil.Object, error) {
     var id uint64
     var data string
     err := row.Scan(&id, &data)
@@ -44,8 +49,8 @@ func ParseRow(row Row) (Object, error) {
 }
 
 func GetByID(id uint64) (*Foo, error) {
-    item, err := Select(
-        ParseRowFunc(ParseRow),
+    item, err := dbutil.Select(
+        dbutil.ParseRowFunc(ParseRow),
         BY_ID_STMT,
         id,
     )
@@ -54,8 +59,8 @@ func GetByID(id uint64) (*Foo, error) {
 
 func GetAll() ([]*Foo, error) {
     var items []*Foo
-    objects, err := SelectList(
-        ParseRowFunc(ParseRow),
+    objects, err := dbutil.SelectList(
+        dbutil.ParseRowFunc(ParseRow),
         SELECT_STMT,
     )
     for _, i := range objects {
