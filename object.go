@@ -7,6 +7,5 @@ type Row interface {
 type ParseRowFunc func(row Row) (Object, error)
 
 type Object interface {
-    MarshalJSON() ([]byte, error)
+    Save() error
 }
-
